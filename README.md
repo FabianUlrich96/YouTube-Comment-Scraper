@@ -3,22 +3,22 @@
 ## Built With
 
 * [Bootstrap](https://react-bootstrap.github.io/)
-* [Celery] (https://docs.celeryproject.org/en/stable/)
+* [Celery](https://docs.celeryproject.org/en/stable/)
 * [Docker](https://www.docker.com)
-* [Flask] (https://flask.palletsprojects.com/en/2.0.x/)
-* [MySQL] (https://www.mysql.com/)
+* [Flask](https://flask.palletsprojects.com/en/2.0.x/)
+* [MySQL](https://www.mysql.com/)
 * [Node.js](https://nodejs.org/en/)
-* [phpMyAdmin] (https://www.phpmyadmin.net/)
+* [phpMyAdmin](https://www.phpmyadmin.net/)
 * [React.js](https://reactjs.org)
-* [Redis] (https://redis.io/)
-* [SQLAlchemy] (https://www.sqlalchemy.org/)
+* [Redis](https://redis.io/)
+* [SQLAlchemy](https://www.sqlalchemy.org/)
 
 ## Getting Started
 
 ### Requirements
 
-* [Docker] (https://www.docker.com/)
-* On Windows: Install [WSL] (https://docs.docker.com/desktop/windows/wsl/)
+* [Docker](https://www.docker.com/)
+* On Windows: Install [WSL](https://docs.docker.com/desktop/windows/wsl/)
 
 ### Setup
 
@@ -41,11 +41,8 @@ docker-compose down
 To start it up again the --build flag is not needed anymore
 
 ## Access Information:
-* Frontend port: "1010"
-* phpMyAdmin port "1030"
-* The backend on "6003"
-* PHPMyAdmin is accessable via "6004"
-
+* Frontend port: 1010
+* phpMyAdmin port 1030
 
 * MYSQL_DATABASE: 'dataapi'
 * MYSQL_USER: 'dataapi'
