@@ -1,0 +1,93 @@
+version: '3.6'
+services:
+  redis:
+    image: redis:6.2-alpine
+    container_name: redis
+    ports:
+      - 6379:6379
+    command: redis-server --save 60 1 --loglevel warning
+         
+  dataapidb:
+    build: ./database
+    container_name: dataapidb
+    restart: always
+    ports:
+      - '1040:3306'
+    expose:
+      - '3306'
+    command: [ "mysqld", "--default-authentication-plugin=mysql_native_password" ]
+    environment:
+      MYSQL_DATABASE: 'dataapi'
+      MYSQL_USER: 'dataapi'
+      MYSQL_PASSWORD: 'fnmwm4d833834erjn'
+      MYSQL_ROOT_PASSWORD: 'CVC93DA3D8kksa5M'
+    volumes:
+      - /home/dataapi/volumes/db:/var/lib/mysql
+      - ./database/database.sql:/docker-entrypoint-initdb.d/database.sql      
+      
+  dataapifrontend:
+    build: ./frontend
+    environment:
+      CHOKIDAR_USEPOLLING: "true"               # For hot reloading without build
+    volumes:
+      - ./frontend:/reactapp                    # Mounting local volume to docker volume
+    container_name: dataapifrontend
+    restart: always
+    ports:
+      - "1010:3000"
+    depends_on:
+      - dataapidb
+      - dataapibackend
+    
+  dataapibackend:
+    build: ./backend
+    environment:
+      CHOKIDAR_USEPOLLING: "true"               # For hot reloading without build
+
+    volumes:
+      - ./backend:/flaskapp                     # Mounting local volume to docker volume
+    container_name: dataapibackend
+    restart: always
+    ports:
+      - "1020:5000"
+    depends_on:
+      - dataapidb
+      - redis
+  dataapiadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: dataapiadmin
+    restart: always
+    ports:
+      - '1030:80'
+    environment:
+      - PMA_HOST=dataapidb
+      
+  celery_video:
+    build: 
+        context: ./backend
+        dockerfile: Video_Docker
+    container_name: celery_video
+    
+    user: nobody
+    depends_on:
+      - redis
+      - dataapibackend
+  celery_comment:
+    build: 
+        context: ./backend
+        dockerfile: Comment_Docker
+    container_name: celery_comment
+    user: nobody
+    depends_on:
+      - redis
+      - dataapibackend
+  celery_translation:
+    build: 
+        context: ./backend
+        dockerfile: Translation_Docker
+    container_name: celery_translation
+    user: nobody
+    depends_on:
+      - redis
+      - dataapibackend
+  
