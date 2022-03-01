@@ -52,6 +52,7 @@ def jobs_all():
         failed = None
         status = 0
         total = None
+        idle = None
 
         if "api" in all_data:
             api = all_data["api"]
@@ -61,7 +62,7 @@ def jobs_all():
 
         job_id = ""
         try:
-            job = Jobs(None, job_type, name, date, query, status, total, done, published_before, published_after, failed)
+            job = Jobs(None, job_type, name, date, query, status, total, done, published_before, published_after, failed, idle)
             db.session.add(job)
             db.session.flush()
             db.session.refresh(job)

@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 import pandas as pd
 from googleapiclient.errors import HttpError
 import pause
-from datetime import datetime
+from datetime import datetime, timedelta
 from pytz import timezone
 from sqlalchemy.orm import sessionmaker
 import logger
@@ -79,17 +79,30 @@ def execute_search_query(keys, job_id, search_query, published_before, published
                 else:
                     the_date = datetime.now()
                     pacific = the_date.astimezone(timezone('US/Pacific'))
-                    current_time = pacific.strftime("%H:%M:%S")
+                    time_change = timedelta(minutes=30)
+                    new_time = pacific - time_change
+                    time = new_time.strftime("%H:%M:%S")
+
                     time_eod = '23:59:59'
                     time_format = '%H:%M:%S'
 
-                    time_delta = datetime.strptime(time_eod, time_format) - datetime.strptime(current_time,
+                    time_delta = datetime.strptime(time_eod, time_format) - datetime.strptime(time,
                                                                                               time_format)
-                    offset = 1800
+                    seconds = time_delta.seconds
+
+                    added = timedelta(seconds=seconds)
+
+                    future_date_and_time = the_date + added
                     pause_time = time_delta.seconds
 
-                    log.info("Idling for {} seconds".format(pause_time + offset))
-                    pause.seconds(pause_time + offset)
+                    log.info("Idling for {} seconds".format(pause_time))
+                    job_db = session.query(Jobs).filter_by(job_id=job_id).first()
+                    job_db.idle = future_date_and_time
+                    session.commit()
+                    pause.seconds(pause_time)
+                    job_db = session.query(Jobs).filter_by(job_id=job_id).first()
+                    job_db.idle = None
+                    session.commit()
                     key_position = 0
                 continue
 
@@ -182,17 +195,30 @@ def get_comments(keys, job_id, video_id):
                 else:
                     the_date = datetime.now()
                     pacific = the_date.astimezone(timezone('US/Pacific'))
-                    current_time = pacific.strftime("%H:%M:%S")
+                    time_change = timedelta(minutes=30)
+                    new_time = pacific - time_change
+                    time = new_time.strftime("%H:%M:%S")
+
                     time_eod = '23:59:59'
                     time_format = '%H:%M:%S'
 
-                    time_delta = datetime.strptime(time_eod, time_format) - datetime.strptime(current_time,
+                    time_delta = datetime.strptime(time_eod, time_format) - datetime.strptime(time,
                                                                                               time_format)
-                    offset = 1800
+                    seconds = time_delta.seconds
+
+                    added = timedelta(seconds=seconds)
+
+                    future_date_and_time = the_date + added
                     pause_time = time_delta.seconds
 
-                    log.info("Idling for {} seconds".format(pause_time + offset))
-                    pause.seconds(pause_time + offset)
+                    log.info("Idling for {} seconds".format(pause_time))
+                    job_db = session.query(Jobs).filter_by(job_id=job_id).first()
+                    job_db.idle = future_date_and_time
+                    session.commit()
+                    pause.seconds(pause_time)
+                    job_db = session.query(Jobs).filter_by(job_id=job_id).first()
+                    job_db.idle = None
+                    session.commit()
                     key_position = 0
                 continue
 

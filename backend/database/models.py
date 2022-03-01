@@ -31,8 +31,9 @@ class Jobs(db.Model):
     total = db.Column(db.Integer)
     done = db.Column(db.Boolean)
     failed_at = db.Column(db.Text)
+    idle = db.Column(db.Text)
 
-    def __init__(self, job_id, job_type, name, date, query, status, total, done, published_before, published_after, failed_at):
+    def __init__(self, job_id, job_type, name, date, query, status, total, done, published_before, published_after, failed_at, idle):
         self.job_id = job_id
         self.job_type = job_type
         self.name = name
@@ -44,6 +45,7 @@ class Jobs(db.Model):
         self.total = total
         self.done = done
         self.failed_at = failed_at
+        self.idle = idle
 
 
 class VideoList(db.Model):

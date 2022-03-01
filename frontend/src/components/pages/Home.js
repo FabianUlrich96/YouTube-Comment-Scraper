@@ -61,6 +61,10 @@ const columns = [
         dataField: "status",
         text: "Status",
         formatter: statusFormatter
+    },
+    {
+        dataField: "idle",
+        text: "Idle till"
     }
 ]
 
