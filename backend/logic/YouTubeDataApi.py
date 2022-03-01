@@ -72,38 +72,64 @@ def execute_search_query(keys, job_id, search_query, published_before, published
                 session.commit()
 
             except HttpError as err:
+
                 log.error("HTTP Error: {}".format(err))
+
                 status_code = err.resp.status
+
                 if status_code == 403 and key_position < keys_length:
                     key_position = key_position + 1
-                else:
+
+                if status_code == 403 and key_position >= keys_length:
+
                     the_date = datetime.now()
+
                     pacific = the_date.astimezone(timezone('US/Pacific'))
+
                     time_change = timedelta(minutes=30)
+
                     new_time = pacific - time_change
+
                     time = new_time.strftime("%H:%M:%S")
 
                     time_eod = '23:59:59'
+
                     time_format = '%H:%M:%S'
 
                     time_delta = datetime.strptime(time_eod, time_format) - datetime.strptime(time,
+
                                                                                               time_format)
+
                     seconds = time_delta.seconds
 
                     added = timedelta(seconds=seconds)
 
                     future_date_and_time = the_date + added
+
                     pause_time = time_delta.seconds
 
                     log.info("Idling for {} seconds".format(pause_time))
+
                     job_db = session.query(Jobs).filter_by(job_id=job_id).first()
+
                     job_db.idle = future_date_and_time
+
                     session.commit()
+
                     pause.seconds(pause_time)
+
                     job_db = session.query(Jobs).filter_by(job_id=job_id).first()
+
                     job_db.idle = None
+
                     session.commit()
+
                     key_position = 0
+
+                else:
+
+                    log.error("HTTP Error: {}".format(err))
+
                 continue
 
             try:
@@ -192,7 +218,8 @@ def get_comments(keys, job_id, video_id):
                 status_code = err.resp.status
                 if status_code == 403 and key_position < keys_length:
                     key_position = key_position + 1
-                else:
+
+                if status_code == 403 and key_position >= keys_length:
                     the_date = datetime.now()
                     pacific = the_date.astimezone(timezone('US/Pacific'))
                     time_change = timedelta(minutes=30)
@@ -220,6 +247,8 @@ def get_comments(keys, job_id, video_id):
                     job_db.idle = None
                     session.commit()
                     key_position = 0
+                else:
+                    log.error("HTTP Error: {}".format(err))
                 continue
 
             try:
