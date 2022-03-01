@@ -77,11 +77,10 @@ def execute_search_query(keys, job_id, search_query, published_before, published
 
                 status_code = err.resp.status
 
-                if status_code == 403 and key_position < keys_length:
+                if status_code == 403 and key_position <= keys_length:
                     key_position = key_position + 1
 
-                if status_code == 403 and key_position >= keys_length:
-
+                if status_code == 403 and key_position > keys_length:
                     the_date = datetime.now()
 
                     pacific = the_date.astimezone(timezone('US/Pacific'))
@@ -107,7 +106,7 @@ def execute_search_query(keys, job_id, search_query, published_before, published
                     future_date_and_time = the_date + added
 
                     pause_time = time_delta.seconds
-
+                    log.error("HTTP Error: {}".format(err))
                     log.info("Idling for {} seconds".format(pause_time))
 
                     job_db = session.query(Jobs).filter_by(job_id=job_id).first()
@@ -125,11 +124,6 @@ def execute_search_query(keys, job_id, search_query, published_before, published
                     session.commit()
 
                     key_position = 0
-
-                else:
-
-                    log.error("HTTP Error: {}".format(err))
-
                 continue
 
             try:
@@ -216,39 +210,71 @@ def get_comments(keys, job_id, video_id):
             except HttpError as err:
                 log.error("HTTP Error: {}".format(err))
                 status_code = err.resp.status
-                if status_code == 403 and key_position < keys_length:
+                err_string = str(err)
+                log.error(err_string)
+
+                if status_code == 400:
+                    job_db = session.query(Jobs).filter_by(job_id=job_id).first()
+                    if page_token is None:
+                        page_token = "No last page"
+                    job_db.failed_at = page_token
+                    session.commit()
+                    break
+                if status_code == 404:
+                    break
+
+                if status_code == 403 and key_position <= keys_length:
                     key_position = key_position + 1
 
-                if status_code == 403 and key_position >= keys_length:
-                    the_date = datetime.now()
-                    pacific = the_date.astimezone(timezone('US/Pacific'))
-                    time_change = timedelta(minutes=30)
-                    new_time = pacific - time_change
-                    time = new_time.strftime("%H:%M:%S")
+                if status_code == 403 and key_position > keys_length:
+                    if "quotaExceeded" in err_string:
+                        log.info("success")
+                        the_date = datetime.now()
 
-                    time_eod = '23:59:59'
-                    time_format = '%H:%M:%S'
+                        pacific = the_date.astimezone(timezone('US/Pacific'))
 
-                    time_delta = datetime.strptime(time_eod, time_format) - datetime.strptime(time,
-                                                                                              time_format)
-                    seconds = time_delta.seconds
+                        time_change = timedelta(minutes=30)
 
-                    added = timedelta(seconds=seconds)
+                        new_time = pacific - time_change
 
-                    future_date_and_time = the_date + added
-                    pause_time = time_delta.seconds
+                        time = new_time.strftime("%H:%M:%S")
 
-                    log.info("Idling for {} seconds".format(pause_time))
-                    job_db = session.query(Jobs).filter_by(job_id=job_id).first()
-                    job_db.idle = future_date_and_time
-                    session.commit()
-                    pause.seconds(pause_time)
-                    job_db = session.query(Jobs).filter_by(job_id=job_id).first()
-                    job_db.idle = None
-                    session.commit()
-                    key_position = 0
-                else:
-                    log.error("HTTP Error: {}".format(err))
+                        time_eod = '23:59:59'
+
+                        time_format = '%H:%M:%S'
+
+                        time_delta = datetime.strptime(time_eod, time_format) - datetime.strptime(time,
+
+                                                                                                  time_format)
+
+                        seconds = time_delta.seconds
+
+                        added = timedelta(seconds=seconds)
+
+                        future_date_and_time = the_date + added
+
+                        pause_time = time_delta.seconds
+                        log.error("HTTP Error: {}".format(err))
+                        log.info("Now Idling for {} seconds".format(pause_time))
+
+                        job_db = session.query(Jobs).filter_by(job_id=job_id).first()
+
+                        job_db.idle = future_date_and_time
+
+                        session.commit()
+
+                        pause.seconds(pause_time)
+
+                        job_db = session.query(Jobs).filter_by(job_id=job_id).first()
+
+                        job_db.idle = None
+
+                        session.commit()
+
+                        key_position = 0
+
+                    else:
+                        break
                 continue
 
             try:

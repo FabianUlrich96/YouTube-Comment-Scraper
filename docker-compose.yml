@@ -65,6 +65,8 @@ services:
     build: 
         context: ./backend
         dockerfile: Video_Docker
+    volumes:
+      - ./backend:/video
     container_name: celery_video
     
     user: nobody
@@ -75,6 +77,8 @@ services:
     build: 
         context: ./backend
         dockerfile: Comment_Docker
+    volumes:
+      - ./backend:/comment
     container_name: celery_comment
     user: nobody
     depends_on:
@@ -84,6 +88,8 @@ services:
     build: 
         context: ./backend
         dockerfile: Translation_Docker
+    volumes:
+      - ./backend:/translation
     container_name: celery_translation
     user: nobody
     depends_on:

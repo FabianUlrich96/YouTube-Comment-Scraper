@@ -10,7 +10,6 @@ from database.models import CommentList
 from database.models import ReplyList
 from database.models import Jobs
 
-
 log = logger.create_logger(__name__)
 
 celery = Celery('tasks', broker='redis://redis:6379/0', backend='redis://redis:6379/0')
@@ -30,7 +29,6 @@ def query_videos(keys, job_id, query, published_before, published_after):
 
 @celery.task(queue="comments")
 def query_comments(keys, job_id, video_ids):
-
     count_total = len(video_ids)
     count_now = 0
     job_db = session.query(Jobs).filter_by(job_id=job_id).first()
@@ -100,4 +98,3 @@ def translate_comments(selected_job, job_id):
     job_db = session.query(Jobs).filter_by(job_id=job_id).first()
     job_db.done = True
     session.commit()
-
