@@ -22,7 +22,6 @@ services:
       MYSQL_PASSWORD: 'fnmwm4d833834erjn'
       MYSQL_ROOT_PASSWORD: 'CVC93DA3D8kksa5M'
     volumes:
-      - /home/dataapi/volumes/db:/var/lib/mysql
       - ./database/database.sql:/docker-entrypoint-initdb.d/database.sql      
       
   dataapifrontend:
