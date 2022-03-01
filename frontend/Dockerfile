@@ -1,11 +1,18 @@
 FROM node:14.17.1-alpine
 
-WORKDIR /reactapp
+WORKDIR /app
 
-COPY package.json /reactapp
+ENV PATH /app/node_modules/.bin:$PATH
 
-COPY . /reactapp
+COPY package.json ./
 
-RUN npm install --silent
+COPY package-lock.json ./
 
-CMD ["npm", "start"]
+RUN cd /app; npm install --production
+RUN cd /app; npm install react-scripts@5.0.0 -g --silent
+
+COPY . /app
+
+COPY . ./
+
+CMD ["npm","start"]

@@ -17,7 +17,9 @@
     "react-scripts": "5.0.0",
     "react-toastify": "^8.2.0",
     "url": "^0.11.0",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4", 
+	"axios": "^0.25.0",
+	"react-bootstrap-table-next": "^4.0.3"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -44,8 +46,5 @@
     ]
   },
   "devDependencies": {
-    "axios": "^0.25.0",
-    "react-bootstrap-table-next": "^4.0.3",
-    "react-router-dom": "^6.2.1"
   }
 }
