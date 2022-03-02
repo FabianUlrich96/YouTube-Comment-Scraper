@@ -29,9 +29,7 @@ def query_videos(keys, job_id, query, published_before, published_after):
     date_range = pandas.date_range(after_object, before_object - timedelta(days=1), freq='d')
 
     for date_object in date_range:
-        after = date_object.isoformat("T") + "Z"
         before = date_object + timedelta(days=1)
-        before = before.isoformat("T") + "Z"
         execute_search_query(keys, job_id, query, before, after)
     job_db = session.query(Jobs).filter_by(job_id=job_id).first()
     job_db.done = True
