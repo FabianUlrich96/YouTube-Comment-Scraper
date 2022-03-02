@@ -42,10 +42,8 @@ def new_connection(key):
 
 def execute_search_query(keys, job_id, search_query, published_before, published_after):
     page_token = ""
-    before_object = datetime.strptime(published_before, '%Y-%m-%d')
-    after_object = datetime.strptime(published_after, '%Y-%m-%d')
-    before = before_object.isoformat("T") + "Z"
-    after = after_object.isoformat("T") + "Z"
+    before = published_before.isoformat("T") + "Z"
+    after = published_after.isoformat("T") + "Z"
     try:
         key_position = 0
         queried = 0
