@@ -79,40 +79,26 @@ def execute_search_query(keys, job_id, search_query, published_before, published
 
                 if status_code == 403 and key_position > keys_length:
                     the_date = datetime.now()
-
                     pacific = the_date.astimezone(timezone('US/Pacific'))
+                    date_idle = pacific.date()
 
-                    time_change = timedelta(minutes=30)
-
-                    new_time = pacific - time_change
-
-                    time = new_time.strftime("%H:%M:%S")
-
-                    time_eod = '23:59:59'
-
-                    time_format = '%H:%M:%S'
-
-                    time_delta = datetime.strptime(time_eod, time_format) - datetime.strptime(time,
-
-                                                                                              time_format)
-
-                    seconds = time_delta.seconds
-
-                    added = timedelta(seconds=seconds)
-
-                    future_date_and_time = the_date + added
-
-                    pause_time = time_delta.seconds
+                    date_change = False
+                    total_idle = 0
                     log.error("HTTP Error: {}".format(err))
-                    log.info("Idling for {} seconds".format(pause_time))
+                    while not date_change:
+                        job_db = session.query(Jobs).filter_by(job_id=job_id).first()
 
-                    job_db = session.query(Jobs).filter_by(job_id=job_id).first()
-
-                    job_db.idle = future_date_and_time
-
-                    session.commit()
-
-                    pause.seconds(pause_time)
+                        job_db.idle = total_idle
+                        session.commit()
+                        the_date = datetime.now()
+                        pacific = the_date.astimezone(timezone('US/Pacific'))
+                        date_now = pacific.date()
+                        if date_now > date_idle:
+                            date_change = True
+                        else:
+                            log.info("Pausing for 1 hour")
+                            total_idle = total_idle + 1
+                            pause.hours(1)
 
                     job_db = session.query(Jobs).filter_by(job_id=job_id).first()
 
@@ -226,42 +212,27 @@ def get_comments(keys, job_id, video_id):
 
                 if status_code == 403 and key_position > keys_length:
                     if "quotaExceeded" in err_string:
-                        log.info("success")
                         the_date = datetime.now()
-
                         pacific = the_date.astimezone(timezone('US/Pacific'))
+                        date_idle = pacific.date()
 
-                        time_change = timedelta(minutes=30)
-
-                        new_time = pacific - time_change
-
-                        time = new_time.strftime("%H:%M:%S")
-
-                        time_eod = '23:59:59'
-
-                        time_format = '%H:%M:%S'
-
-                        time_delta = datetime.strptime(time_eod, time_format) - datetime.strptime(time,
-
-                                                                                                  time_format)
-
-                        seconds = time_delta.seconds
-
-                        added = timedelta(seconds=seconds)
-
-                        future_date_and_time = the_date + added
-
-                        pause_time = time_delta.seconds
+                        date_change = False
+                        total_idle = 0
                         log.error("HTTP Error: {}".format(err))
-                        log.info("Now Idling for {} seconds".format(pause_time))
+                        while not date_change:
+                            job_db = session.query(Jobs).filter_by(job_id=job_id).first()
 
-                        job_db = session.query(Jobs).filter_by(job_id=job_id).first()
-
-                        job_db.idle = future_date_and_time
-
-                        session.commit()
-
-                        pause.seconds(pause_time)
+                            job_db.idle = total_idle
+                            session.commit()
+                            the_date = datetime.now()
+                            pacific = the_date.astimezone(timezone('US/Pacific'))
+                            date_now = pacific.date()
+                            if date_now > date_idle:
+                                date_change = True
+                            else:
+                                log.info("Pausing for 1 hour")
+                                total_idle = total_idle + 1
+                                pause.hours(1)
 
                         job_db = session.query(Jobs).filter_by(job_id=job_id).first()
 
