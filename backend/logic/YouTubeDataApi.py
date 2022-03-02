@@ -40,13 +40,12 @@ def new_connection(key):
     return api_connection
 
 
-def execute_search_query(keys, job_id, search_query, published_before, published_after):
+def execute_search_query(keys, job_id, search_query, published_before, published_after, queried):
     page_token = ""
     before = published_before.isoformat("T") + "Z"
     after = published_after.isoformat("T") + "Z"
     try:
         key_position = 0
-        queried = 0
         while page_token is not None and True:
             log.info(page_token)
             log.info("Key with this position is used")
@@ -129,6 +128,7 @@ def execute_search_query(keys, job_id, search_query, published_before, published
             except KeyError:
                 page_token = None
                 log.info("Reached last page!")
+                return queried
 
             for item in response["items"]:
                 kind.append(item["kind"])
