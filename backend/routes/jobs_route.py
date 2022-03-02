@@ -16,7 +16,7 @@ job_schema = JobsSchema()
 jobs_schema = JobsSchema(many=True)
 jobs_blueprint = Blueprint('jobs_blueprint', __name__, template_folder='templates')
 
-celery_context = Celery('simple_worker', broker='redis://redis:6379/0', backend='redis://redis:6379/0')
+celery = Celery('tasks', broker='redis://:4dahd42aldgj@redis:6379/0', backend='redis://:4dahd42aldgj@redis:6379/0')
 
 
 @jobs_blueprint.route('/jobs', methods=['GET', 'POST', 'DELETE'])
