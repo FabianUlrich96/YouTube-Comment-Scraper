@@ -7,4 +7,4 @@ WORKDIR /translation
 
 COPY . ./
 
-CMD celery -A tasks worker --loglevel=info -Q translation
+CMD celery -A tasks worker --loglevel=info -Q translation --without-heartbeat --without-gossip --without-mingle

@@ -7,4 +7,4 @@ WORKDIR /comments
 
 COPY . ./
 
-CMD celery -A tasks worker --loglevel=info -Q comments
+CMD celery -A tasks worker --loglevel=info -Q comments --without-heartbeat --without-gossip --without-mingle

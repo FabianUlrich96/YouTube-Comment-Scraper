@@ -7,4 +7,4 @@ WORKDIR /video
 
 COPY . ./
 
-CMD celery -A tasks worker --loglevel=info -Q video
+CMD celery -A tasks worker --loglevel=info -Q video --without-heartbeat --without-gossip --without-mingle
