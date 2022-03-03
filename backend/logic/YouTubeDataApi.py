@@ -42,6 +42,7 @@ def new_connection(key):
 
 def execute_search_query(keys, job_id, search_query, published_before, published_after, queried):
     page_token = ""
+    keep_token = False
     before = published_before.isoformat("T") + "Z"
     after = published_after.isoformat("T") + "Z"
     try:
@@ -76,12 +77,13 @@ def execute_search_query(keys, job_id, search_query, published_before, published
 
                 if status_code == 403 and key_position <= keys_length:
                     key_position = key_position + 1
+                    keep_token = True
 
                 if status_code == 403 and key_position > keys_length:
                     the_date = datetime.now()
                     pacific = the_date.astimezone(timezone('US/Pacific'))
                     date_idle = pacific.date()
-
+                    keep_token = True
                     date_change = False
                     total_idle = 0
                     log.error("HTTP Error: {}".format(err))
@@ -110,7 +112,10 @@ def execute_search_query(keys, job_id, search_query, published_before, published
                 continue
 
             try:
-                page_token = response["nextPageToken"]
+                if not keep_token:
+                    page_token = response["nextPageToken"]
+                else:
+                    page_token = page_token
             except KeyError:
                 page_token = None
                 log.info("Reached last page!")
@@ -164,6 +169,8 @@ def get_comments(keys, job_id, video_id):
     page_token = ""
     try:
         key_position = 0
+        keep_token = False
+
         while page_token is not None and True:
             log.info(key_position)
             keys_length = len(keys) - 1
@@ -209,6 +216,8 @@ def get_comments(keys, job_id, video_id):
 
                 if status_code == 403 and key_position <= keys_length:
                     key_position = key_position + 1
+                    keep_token = True
+
 
                 if status_code == 403 and key_position > keys_length:
                     if "quotaExceeded" in err_string:
@@ -217,6 +226,7 @@ def get_comments(keys, job_id, video_id):
                         date_idle = pacific.date()
 
                         date_change = False
+                        keep_token = True
                         total_idle = 0
                         log.error("HTTP Error: {}".format(err))
                         while not date_change:
@@ -247,7 +257,10 @@ def get_comments(keys, job_id, video_id):
                 continue
 
             try:
-                page_token = response["nextPageToken"]
+                if not keep_token:
+                    page_token = response["nextPageToken"]
+                else:
+                    page_token = page_token
             except KeyError:
                 page_token = None
 
