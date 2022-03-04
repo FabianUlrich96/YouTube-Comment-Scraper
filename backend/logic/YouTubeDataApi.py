@@ -110,17 +110,6 @@ def execute_search_query(keys, job_id, search_query, published_before, published
 
                     key_position = 0
                 continue
-
-            try:
-                if not keep_token:
-                    page_token = response["nextPageToken"]
-                else:
-                    page_token = page_token
-            except KeyError:
-                page_token = None
-                log.info("Reached last page!")
-                return queried
-
             for item in response["items"]:
                 kind.append(item["kind"])
                 try:
@@ -132,6 +121,8 @@ def execute_search_query(keys, job_id, search_query, published_before, published
                     except KeyError:
                         result_id.append(None)
             data = {'kind': kind, 'video_id': result_id}
+
+            log.info(data)
             # Save each badge to database
             dataframe = pd.DataFrame(data)
             dataframe['job'] = job_id
@@ -140,6 +131,19 @@ def execute_search_query(keys, job_id, search_query, published_before, published
             date_now = now.strftime("%Y/%m/%d")
             dataframe['date'] = date_now
             save_video_list(dataframe, job_id, page_token)
+
+            try:
+                if not keep_token:
+                    page_token = response["nextPageToken"]
+                else:
+                    keep_token = False
+                    page_token = page_token
+            except KeyError:
+                page_token = None
+                log.info("Reached last page!")
+                return queried
+
+
 
     except TypeError as err:
         log.error("Next page failed with error: {}".format(err))
@@ -167,10 +171,9 @@ def save_comment_list(data):
 
 def get_comments(keys, job_id, video_id):
     page_token = ""
+    keep_token = False
     try:
         key_position = 0
-        keep_token = False
-
         while page_token is not None and True:
             log.info(key_position)
             keys_length = len(keys) - 1
@@ -256,14 +259,6 @@ def get_comments(keys, job_id, video_id):
                         break
                 continue
 
-            try:
-                if not keep_token:
-                    page_token = response["nextPageToken"]
-                else:
-                    page_token = page_token
-            except KeyError:
-                page_token = None
-
             for item in response['items']:
                 author.append(item['snippet']['topLevelComment']['snippet']['authorDisplayName'])
                 likes.append(item['snippet']['topLevelComment']['snippet']['likeCount'])
@@ -323,6 +318,16 @@ def get_comments(keys, job_id, video_id):
             reply_dataframe['date'] = date_now
 
             save_reply_list(reply_dataframe, job_id, page_token)
+
+            try:
+                if not keep_token:
+                    page_token = response["nextPageToken"]
+                else:
+                    keep_token = False
+                    page_token = page_token
+            except KeyError:
+                page_token = None
+
             break
 
     except TypeError as err:
