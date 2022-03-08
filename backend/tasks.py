@@ -11,6 +11,7 @@ from sqlalchemy import create_engine, func, select
 from database.models import CommentList
 from database.models import ReplyList
 from database.models import Jobs
+import time
 
 log = logger.create_logger(__name__)
 
@@ -53,6 +54,7 @@ def query_comments(keys, job_id, video_ids):
     job_db.total = count_total
     session.commit()
     for video in video_ids:
+        log.info(video)
         get_comments(keys, job_id, video)
         count_now = count_now + 1
         job_db = session.query(Jobs).filter_by(job_id=job_id).first()

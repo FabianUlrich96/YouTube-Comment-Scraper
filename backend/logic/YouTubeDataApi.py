@@ -169,30 +169,95 @@ def save_comment_list(data):
         log.error(e)
 
 
+def get_replies(response, job_id, page_token, video_id):
+    author = []
+    likes = []
+    published = []
+    updated = []
+    comment = []
+    reply_count = []
+    comment_id = []
+    parent_id = []
+    reply_author = []
+    reply_likes = []
+    reply_published = []
+    reply_updated = []
+    reply_comment = []
+    for item in response['items']:
+        author.append(item['snippet']['topLevelComment']['snippet']['authorDisplayName'])
+        likes.append(item['snippet']['topLevelComment']['snippet']['likeCount'])
+        published_string = item['snippet']['topLevelComment']['snippet']['publishedAt'][:-1]
+        published_date = datetime.fromisoformat(published_string)
+        published.append(published_date)
+
+        updated_string = item['snippet']['topLevelComment']['snippet']['updatedAt'][:-1]
+        updated_date = datetime.fromisoformat(updated_string)
+        updated.append(updated_date)
+
+        comment.append(item['snippet']['topLevelComment']['snippet']['textDisplay'])
+        reply_count.append(item['snippet']['totalReplyCount'])
+        comment_id.append(item['snippet']['topLevelComment']['id'])
+
+        replies = item['snippet']['totalReplyCount']
+
+        # if reply is there
+        if replies > 0:
+
+            # iterate through all reply
+            for reply in item['replies']['comments']:
+                # Extract reply
+                parent_id.append(reply['snippet']['parentId'])
+                reply_author.append(reply['snippet']['authorDisplayName'])
+                reply_likes.append(reply['snippet']['likeCount'])
+
+                reply_published_string = reply['snippet']['publishedAt'][:-1]
+                reply_published_date = datetime.fromisoformat(reply_published_string)
+                reply_published.append(reply_published_date)
+                reply_updated_string = reply['snippet']['updatedAt'][:-1]
+                reply_updated_date = datetime.fromisoformat(reply_updated_string)
+                reply_updated.append(reply_updated_date)
+
+                reply_comment.append(reply['snippet']['textDisplay'])
+
+    comment_data = {'video_id': video_id, 'author': author, 'likes': likes, 'published': published,
+                    'updated': updated, 'comment': comment, 'reply_count': reply_count,
+                    'comment_id': comment_id}
+    reply_data = {'video_id': video_id, 'parent_id': parent_id, 'author': reply_author,
+                  'likes': reply_likes, 'published': reply_published, 'updated': reply_updated,
+                  'comment': reply_comment}
+
+    comment_dataframe = pd.DataFrame(comment_data)
+    comment_dataframe['job'] = job_id
+    comment_dataframe['page'] = page_token
+    now = datetime.now()
+    date_now = now.strftime("%Y/%m/%d")
+    comment_dataframe['date'] = date_now
+    save_comment_list(comment_dataframe)
+
+    reply_dataframe = pd.DataFrame(reply_data)
+    reply_dataframe['job'] = job_id
+    reply_dataframe['page'] = page_token
+    now = datetime.now()
+    date_now = now.strftime("%Y/%m/%d")
+    reply_dataframe['date'] = date_now
+
+    save_reply_list(reply_dataframe, job_id, page_token)
+
+
 def get_comments(keys, job_id, video_id):
+    log.info(video_id)
     page_token = ""
     keep_token = False
     try:
         key_position = 0
         while page_token is not None and True:
-            log.info(key_position)
+            log.info(page_token)
             keys_length = len(keys) - 1
             response = None
-            author = []
-            likes = []
-            published = []
-            updated = []
-            comment = []
-            reply_count = []
-            comment_id = []
-            parent_id = []
-            reply_author = []
-            reply_likes = []
-            reply_published = []
-            reply_updated = []
-            reply_comment = []
+
             try:
-                log.info(keys[key_position])
+                video_id = video_id.strip()
+                # log.info(keys[key_position])
                 api_connection = new_connection(keys[key_position])
                 request = api_connection.commentThreads().list(
                     maxResults=50,
@@ -201,11 +266,12 @@ def get_comments(keys, job_id, video_id):
                     pageToken=page_token
                 )
                 response = request.execute()
+                get_replies(response, job_id, page_token, video_id)
             except HttpError as err:
-                log.error("HTTP Error: {}".format(err))
+                # log.error("HTTP Error: {}".format(err))
                 status_code = err.resp.status
                 err_string = str(err)
-                log.error(err_string)
+                # log.error(err_string)
 
                 if status_code == 400:
                     job_db = session.query(Jobs).filter_by(job_id=job_id).first()
@@ -215,12 +281,16 @@ def get_comments(keys, job_id, video_id):
                     session.commit()
                     break
                 if status_code == 404:
+                    job_db = session.query(Jobs).filter_by(job_id=job_id).first()
+                    if page_token is None:
+                        page_token = "No last page"
+                    job_db.failed_at = page_token
+                    session.commit()
                     break
 
                 if status_code == 403 and key_position <= keys_length:
                     key_position = key_position + 1
                     keep_token = True
-
 
                 if status_code == 403 and key_position > keys_length:
                     if "quotaExceeded" in err_string:
@@ -256,68 +326,7 @@ def get_comments(keys, job_id, video_id):
                         key_position = 0
 
                     else:
-                        break
-                continue
-
-            for item in response['items']:
-                author.append(item['snippet']['topLevelComment']['snippet']['authorDisplayName'])
-                likes.append(item['snippet']['topLevelComment']['snippet']['likeCount'])
-                published_string = item['snippet']['topLevelComment']['snippet']['publishedAt'][:-1]
-                published_date = datetime.fromisoformat(published_string)
-                published.append(published_date)
-
-                updated_string = item['snippet']['topLevelComment']['snippet']['updatedAt'][:-1]
-                updated_date = datetime.fromisoformat(updated_string)
-                updated.append(updated_date)
-
-                comment.append(item['snippet']['topLevelComment']['snippet']['textDisplay'])
-                reply_count.append(item['snippet']['totalReplyCount'])
-                comment_id.append(item['snippet']['topLevelComment']['id'])
-
-                replies = item['snippet']['totalReplyCount']
-
-                # if reply is there
-                if replies > 0:
-
-                    # iterate through all reply
-                    for reply in item['replies']['comments']:
-                        # Extract reply
-                        parent_id.append(reply['snippet']['parentId'])
-                        reply_author.append(reply['snippet']['authorDisplayName'])
-                        reply_likes.append(reply['snippet']['likeCount'])
-
-                        reply_published_string = reply['snippet']['publishedAt'][:-1]
-                        reply_published_date = datetime.fromisoformat(reply_published_string)
-                        reply_published.append(reply_published_date)
-                        reply_updated_string = reply['snippet']['updatedAt'][:-1]
-                        reply_updated_date = datetime.fromisoformat(reply_updated_string)
-                        reply_updated.append(reply_updated_date)
-
-                        reply_comment.append(reply['snippet']['textDisplay'])
-
-            comment_data = {'video_id': video_id, 'author': author, 'likes': likes, 'published': published,
-                            'updated': updated, 'comment': comment, 'reply_count': reply_count,
-                            'comment_id': comment_id}
-            reply_data = {'video_id': video_id, 'parent_id': parent_id, 'author': reply_author,
-                          'likes': reply_likes, 'published': reply_published, 'updated': reply_updated,
-                          'comment': reply_comment}
-
-            comment_dataframe = pd.DataFrame(comment_data)
-            comment_dataframe['job'] = job_id
-            comment_dataframe['page'] = page_token
-            now = datetime.now()
-            date_now = now.strftime("%Y/%m/%d")
-            comment_dataframe['date'] = date_now
-            save_comment_list(comment_dataframe)
-
-            reply_dataframe = pd.DataFrame(reply_data)
-            reply_dataframe['job'] = job_id
-            reply_dataframe['page'] = page_token
-            now = datetime.now()
-            date_now = now.strftime("%Y/%m/%d")
-            reply_dataframe['date'] = date_now
-
-            save_reply_list(reply_dataframe, job_id, page_token)
+                        continue
 
             try:
                 if not keep_token:
@@ -327,8 +336,9 @@ def get_comments(keys, job_id, video_id):
                     page_token = page_token
             except KeyError:
                 page_token = None
+                break
 
-            break
+            continue
 
     except TypeError as err:
         log.error("Next page failed with error: {}".format(err))
