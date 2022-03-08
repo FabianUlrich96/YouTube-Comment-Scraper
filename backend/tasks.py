@@ -30,10 +30,14 @@ def query_videos(keys, job_id, query, published_before, published_after):
     try:
         date_range = pandas.date_range(after_object, before_object - timedelta(days=1), freq='d')
         for date_object in date_range:
+            
             after = date_object
             before = date_object + timedelta(days=1)
+            log.info(after)
+            log.info(before)
             queried = execute_search_query(keys, job_id, query, before, after, queried)
     except:
+        log.error("Try in query_videos failed")
         queried = execute_search_query(keys, job_id, query, before_object, after_object, queried)
     job_db = session.query(Jobs).filter_by(job_id=job_id).first()
     job_db.done = True
