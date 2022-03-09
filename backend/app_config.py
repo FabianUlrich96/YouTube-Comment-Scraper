@@ -19,7 +19,6 @@ app.config["JWT_SECRET_KEY"] = "sdadaji3u2h3u4h23u42334234kdas"
 jwt = JWTManager(app)
 
 db = SQLAlchemy(app)
-db.init_app(app)
 ma = Marshmallow(app)
 
 
