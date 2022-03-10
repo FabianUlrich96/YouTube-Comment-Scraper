@@ -17,7 +17,7 @@ log = logger.create_logger(__name__)
 
 celery = Celery('tasks', broker='redis://:4dahd42aldgj@redis:6379/0', backend='redis://:4dahd42aldgj@redis:6379/0')
 
-engine = create_engine('mysql+pymysql://dataapi:fnmwm4d833834erjn@dataapidb/dataapi?charset=utf8mb4')
+engine = create_engine('mysql+pymysql://dataapi:fnmwm4d833834erjn@dataapidb/dataapi?charset=utf8mb4', pool_pre_ping=True)
 Session = sessionmaker(bind=engine)
 session = Session()
 

@@ -16,7 +16,7 @@ from database.models import Jobs
 log = logger.create_logger(__name__)
 
 
-engine = create_engine('mysql+pymysql://dataapi:fnmwm4d833834erjn@dataapidb/dataapi?charset=utf8mb4')
+engine = create_engine('mysql+pymysql://dataapi:fnmwm4d833834erjn@dataapidb/dataapi?charset=utf8mb4', pool_pre_ping=True)
 Session = sessionmaker(bind=engine)
 session = Session()
 
